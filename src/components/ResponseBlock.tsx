@@ -21,6 +21,9 @@ export function ResponseBlockView({ block }: Props) {
       return <ThinkingView block={block} />;
     case 'mcpServersStarting':
       return <McpServersStartingView block={block} />;
+    case 'progressTask':
+    case 'progressTaskSerialized':
+      return <ProgressTaskView block={block} />;
     default:
       return <UnknownKindView block={block} />;
   }
@@ -121,6 +124,41 @@ function ThinkingView({ block }: { block: ResponseBlock }) {
           <Markdown source={text} />
         </div>
       </div>
+    </details>
+  );
+}
+
+function ProgressTaskView({ block }: { block: ResponseBlock }) {
+  const b = block as { content?: unknown; progress?: unknown };
+  const label = extractText(b.content);
+  const progress = Array.isArray(b.progress) ? b.progress : [];
+
+  if (!label && progress.length === 0) return null;
+
+  if (progress.length === 0) {
+    return (
+      <div className="my-1 text-[13px] text-fg-dim italic">
+        {label || '(no message)'}
+      </div>
+    );
+  }
+  return (
+    <details className="my-2 text-[13px] group">
+      <summary className="cursor-pointer flex items-center gap-2 text-fg-muted hover:text-fg select-none list-none [&::-webkit-details-marker]:hidden">
+        <span className="text-fg-dim text-[10px] w-3 shrink-0 group-open:rotate-90 transition-transform">▸</span>
+        <span className="italic">{label || 'Progress'}</span>
+        <span className="text-fg-dim text-[12px]">{progress.length} 件</span>
+      </summary>
+      <ul className="mt-2 ml-5 pl-3 border-l-2 border-line-subtle text-fg-muted space-y-1">
+        {progress.map((item, i) => {
+          const text = extractText(item);
+          return (
+            <li key={i} className="text-[12.5px]">
+              {text || <span className="font-mono text-fg-dim">{JSON.stringify(item)}</span>}
+            </li>
+          );
+        })}
+      </ul>
     </details>
   );
 }
