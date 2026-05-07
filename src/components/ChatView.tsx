@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
 import type { Payload } from '../types/payload';
 import { buildShareUrl, encodePayload, estimateUrlLength } from '../utils/encoding';
 import { MessageItem } from './MessageItem';
@@ -31,6 +32,12 @@ export function ChatView({ initial }: Props) {
       {/* 上部の細いヘッダーバー */}
       <div className="border-b border-line-subtle bg-bg-elev">
         <div className="max-w-3xl mx-auto px-4 flex items-center gap-5 text-[11px] tracking-[0.12em] uppercase h-9">
+          <Link
+            to="/"
+            className="text-fg-muted hover:text-fg h-9 flex items-center transition-colors"
+          >
+            Home
+          </Link>
           <span className="text-fg border-b-2 border-accent h-9 flex items-center -mb-px">
             Chat
           </span>
