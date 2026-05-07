@@ -12,7 +12,7 @@ export function Markdown({ source }: Props) {
     <div className="prose-chat max-w-none break-words">
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
-        rehypePlugins={[[rehypeHighlight, { detect: true, ignoreMissing: true }]]}
+        rehypePlugins={[[rehypeHighlight, { detect: false, ignoreMissing: true }]]}
       >
         {source}
       </ReactMarkdown>
