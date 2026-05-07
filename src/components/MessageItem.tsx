@@ -1,4 +1,3 @@
-import type { ReactNode } from 'react';
 import type { ChatRequest, ChatUserMessage, ResponseBlock } from '../types/chat';
 import { basename, extractText, extractUriPath } from '../utils/extract';
 import { ResponseBlockView } from './ResponseBlock';
@@ -6,36 +5,53 @@ import { Markdown } from './Markdown';
 
 type Props = {
   request: ChatRequest;
-  requesterName: string;
-  responderName: string;
 };
 
-export function MessageItem({ request, requesterName, responderName }: Props) {
+export function MessageItem({ request }: Props) {
   const userText = readUserText(request.message);
   const blocks = Array.isArray(request.response) ? request.response : [];
   const chunks = mergeBlocks(blocks);
 
   return (
-    <article className="border-t border-neutral-200 py-6 space-y-4">
-      <Bubble role="user" name={requesterName}>
-        {userText ? <Markdown source={userText} /> : <span className="italic text-neutral-400">（空のリクエスト）</span>}
-      </Bubble>
-      <Bubble role="assistant" name={responderName}>
-        {chunks.length === 0 ? (
-          <span className="italic text-neutral-400">（応答なし）</span>
-        ) : (
-          <div className="space-y-2 min-w-0">
-            {chunks.map((c, i) =>
-              c.kind === 'md' ? (
-                <Markdown key={i} source={c.source} />
-              ) : (
-                <ResponseBlockView key={i} block={c.block} />
-              ),
-            )}
-          </div>
-        )}
-      </Bubble>
+    <article className="py-5 space-y-4">
+      <UserMessage text={userText} />
+      <AssistantMessage chunks={chunks} />
     </article>
+  );
+}
+
+function UserMessage({ text }: { text: string }) {
+  return (
+    <div className="flex justify-end">
+      <div className="max-w-[78%] bg-[#363636] text-fg rounded-2xl px-3.5 py-2 text-[14px] leading-snug min-w-0">
+        {text ? (
+          <div className="prose-chat prose-chat--compact">
+            <Markdown source={text} />
+          </div>
+        ) : (
+          <span className="italic text-fg-dim">（空のリクエスト）</span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function AssistantMessage({ chunks }: { chunks: Chunk[] }) {
+  if (chunks.length === 0) {
+    return <div className="italic text-fg-dim text-sm">（応答なし）</div>;
+  }
+  return (
+    <div className="space-y-1 min-w-0">
+      {chunks.map((c, i) =>
+        c.kind === 'md' ? (
+          <div key={i} className="prose-chat min-w-0">
+            <Markdown source={c.source} />
+          </div>
+        ) : (
+          <ResponseBlockView key={i} block={c.block} />
+        ),
+      )}
+    </div>
   );
 }
 
@@ -125,30 +141,4 @@ function inlineReferenceToMarkdown(block: ResponseBlock): string {
 
 function escapeBackticks(s: string): string {
   return s.replace(/`/g, '\\`');
-}
-
-type BubbleProps = {
-  role: 'user' | 'assistant';
-  name: string;
-  children: ReactNode;
-};
-
-function Bubble({ role, name, children }: BubbleProps) {
-  const isUser = role === 'user';
-  return (
-    <div
-      className={`rounded-lg border p-4 min-w-0 ${
-        isUser ? 'bg-neutral-100 border-neutral-200' : 'bg-white border-neutral-200'
-      }`}
-    >
-      <div
-        className={`text-xs uppercase tracking-wide mb-2 ${
-          isUser ? 'text-neutral-500' : 'text-accent'
-        }`}
-      >
-        {name}
-      </div>
-      <div className="min-w-0">{children}</div>
-    </div>
-  );
 }

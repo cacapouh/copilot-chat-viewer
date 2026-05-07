@@ -25,49 +25,47 @@ export function ChatView({ initial }: Props) {
   const urlLength = useMemo(() => estimateUrlLength(encoded), [encoded]);
 
   const requests = Array.isArray(initial.rawJson.requests) ? initial.rawJson.requests : [];
-  const requesterName = initial.rawJson.requesterUsername || 'You';
-  const responderName = initial.rawJson.responderUsername || 'GitHub Copilot';
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-      <header className="flex items-center justify-between gap-4 flex-wrap">
-        <h1 className="text-2xl font-semibold tracking-tight">Copilot Chat Viewer</h1>
-        <SizeIndicator bytes={urlLength} />
-      </header>
+    <div className="min-h-screen flex flex-col">
+      {/* 上部の細いヘッダーバー */}
+      <div className="border-b border-line-subtle bg-bg-elev">
+        <div className="max-w-3xl mx-auto px-4 flex items-center gap-5 text-[11px] tracking-[0.12em] uppercase h-9">
+          <span className="text-fg border-b-2 border-accent h-9 flex items-center -mb-px">
+            Chat
+          </span>
+          <span className="ml-auto">
+            <SizeIndicator bytes={urlLength} />
+          </span>
+        </div>
+      </div>
 
-      <section className="space-y-3 bg-white border border-neutral-200 rounded-lg p-4">
-        <label className="block">
-          <span className="text-xs uppercase tracking-wide text-neutral-500">タイトル</span>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="このチャットのタイトル"
-            className="mt-1 w-full text-lg font-medium border-b border-neutral-300 py-1 focus:outline-none focus:border-neutral-900 bg-transparent"
-          />
-        </label>
-      </section>
-
-      <section className="bg-white border border-neutral-200 rounded-lg p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500 mb-3">共有</h2>
+      {/* タイトル + シェア */}
+      <div className="max-w-3xl w-full mx-auto px-4 pt-5 pb-3 space-y-3">
+        <input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="このチャットのタイトル"
+          aria-label="チャットタイトル"
+          className="w-full text-[15px] font-medium bg-transparent text-fg placeholder:text-fg-dim focus:outline-none"
+        />
         <ShareBar buildShareUrl={() => buildShareUrl(encodePayload(payload))} />
-      </section>
+      </div>
 
-      <section>
+      {/* 会話本体 */}
+      <main className="flex-1 max-w-3xl w-full mx-auto px-4 pb-12">
         {requests.length === 0 ? (
-          <div className="text-neutral-500 text-sm border border-dashed border-neutral-300 rounded p-6 text-center">
+          <div className="text-fg-muted text-sm border border-dashed border-line rounded p-6 text-center mt-6">
             requests が見つかりませんでした。chat.json の構造を確認してください。
           </div>
         ) : (
-          requests.map((req, i) => (
-            <MessageItem
-              key={i}
-              request={req}
-              requesterName={requesterName}
-              responderName={responderName}
-            />
-          ))
+          <div className="divide-y divide-line-subtle">
+            {requests.map((req, i) => (
+              <MessageItem key={i} request={req} />
+            ))}
+          </div>
         )}
-      </section>
+      </main>
     </div>
   );
 }

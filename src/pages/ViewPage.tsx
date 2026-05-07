@@ -50,11 +50,11 @@ export function ViewPage() {
   if (result.kind === 'error') {
     return (
       <div className="max-w-xl mx-auto px-4 py-12">
-        <h1 className="text-xl font-semibold mb-2">URL が壊れています</h1>
-        <p className="text-sm text-neutral-700">
+        <h1 className="text-xl font-semibold mb-2 text-fg">URL が壊れています</h1>
+        <p className="text-sm text-fg-muted">
           共有データを復号できませんでした。URL が途中で切れている可能性があります。
         </p>
-        <pre className="mt-3 text-xs bg-neutral-100 p-3 rounded overflow-x-auto">{result.message}</pre>
+        <pre className="mt-3 text-xs bg-bg-elev border border-line-subtle text-fg-muted p-3 rounded overflow-x-auto">{result.message}</pre>
         <Link to="/" className="inline-block mt-6 text-sm text-accent underline">
           アップロード画面に戻る
         </Link>
@@ -65,8 +65,8 @@ export function ViewPage() {
   if (result.kind === 'empty') {
     return (
       <div className="max-w-xl mx-auto px-4 py-12">
-        <h1 className="text-xl font-semibold mb-2">表示するデータがありません</h1>
-        <p className="text-sm text-neutral-700">
+        <h1 className="text-xl font-semibold mb-2 text-fg">表示するデータがありません</h1>
+        <p className="text-sm text-fg-muted">
           URL のフラグメントが空で、アップロードもされていません。
         </p>
         <Link to="/" className="inline-block mt-6 text-sm text-accent underline">

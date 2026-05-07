@@ -2,9 +2,12 @@ import { useState } from 'react';
 
 type Props = {
   buildShareUrl: () => string;
+  className?: string;
 };
 
-export function ShareBar({ buildShareUrl }: Props) {
+// 入力欄っぽさを排した、通常のボタン + URL 表示。
+// "テキストを書きたくなる" 形にならないよう placeholder / 大きな空エリアは持たせない。
+export function ShareBar({ buildShareUrl, className }: Props) {
   const [copied, setCopied] = useState<'idle' | 'ok' | 'err'>('idle');
   const [lastUrl, setLastUrl] = useState<string | null>(null);
 
@@ -21,18 +24,27 @@ export function ShareBar({ buildShareUrl }: Props) {
   }
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-3 flex-wrap">
+    <div className={className}>
+      <div className="flex items-center gap-2 flex-wrap">
         <button
           type="button"
           onClick={onShare}
-          className="px-4 py-2 rounded bg-neutral-900 text-white hover:bg-neutral-800 text-sm"
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-bg-chip border border-line text-fg-muted hover:text-fg hover:bg-bg-elev text-[12px]"
         >
-          共有 URL を作成してコピー
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M11 5.5 5 9m0-2L11 10.5M5 8a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm9-4.5a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Zm0 9a1.5 1.5 0 1 1-3 0 1.5 1.5 0 0 1 3 0Z"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          共有 URL をコピー
         </button>
-        {copied === 'ok' && <span className="text-xs text-emerald-700">コピーしました</span>}
+        {copied === 'ok' && <span className="text-[12px] text-emerald-400">コピーしました</span>}
         {copied === 'err' && (
-          <span className="text-xs text-red-700">クリップボード書き込みに失敗しました。下の欄からコピーしてください</span>
+          <span className="text-[12px] text-rose-400">コピー失敗・下の欄から手動でコピーしてください</span>
         )}
       </div>
       {lastUrl && (
@@ -40,7 +52,8 @@ export function ShareBar({ buildShareUrl }: Props) {
           readOnly
           value={lastUrl}
           onClick={(e) => (e.target as HTMLTextAreaElement).select()}
-          className="w-full min-h-[80px] text-xs font-mono border border-neutral-300 rounded p-2 bg-white"
+          aria-label="生成された共有 URL"
+          className="mt-2 w-full min-h-[60px] max-h-[140px] text-[12px] font-mono bg-bg-elev border border-line-subtle text-fg rounded-md p-2 resize-none focus:outline-none focus:border-line"
         />
       )}
     </div>

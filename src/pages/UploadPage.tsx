@@ -41,12 +41,12 @@ export function UploadPage() {
   return (
     <div className="max-w-2xl mx-auto px-4 py-12">
       <header className="mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight">Copilot Chat Viewer</h1>
-        <p className="mt-2 text-neutral-600">
-          VS Code の GitHub Copilot Chat エクスポート（<code className="font-mono text-sm">chat.json</code>）を
+        <h1 className="text-3xl font-semibold tracking-tight text-fg">Copilot Chat Viewer</h1>
+        <p className="mt-2 text-fg-muted">
+          VS Code の GitHub Copilot Chat エクスポート（<code className="font-mono text-sm bg-bg-chip text-fg px-1 py-[1px] rounded">chat.json</code>）を
           ブラウザで整形表示し、共有 URL を発行します。
         </p>
-        <p className="mt-1 text-sm text-neutral-500">
+        <p className="mt-1 text-sm text-fg-dim">
           サーバ送信なし・ストレージなし。データは URL に圧縮埋め込みされます。
         </p>
       </header>
@@ -64,11 +64,11 @@ export function UploadPage() {
           if (file) void handleFile(file);
         }}
         className={`block border-2 border-dashed rounded-lg p-12 text-center cursor-pointer transition-colors ${
-          dragOver ? 'border-neutral-900 bg-neutral-100' : 'border-neutral-300 hover:bg-neutral-50'
+          dragOver ? 'border-accent bg-bg-elev' : 'border-line hover:bg-bg-elev'
         }`}
       >
-        <div className="text-lg font-medium">chat.json をドロップ</div>
-        <div className="text-sm text-neutral-500 mt-1">またはクリックしてファイル選択</div>
+        <div className="text-lg font-medium text-fg">chat.json をドロップ</div>
+        <div className="text-sm text-fg-dim mt-1">またはクリックしてファイル選択</div>
         <input
           type="file"
           accept="application/json,.json"
@@ -80,10 +80,10 @@ export function UploadPage() {
         />
       </label>
 
-      {busy && <div className="mt-4 text-sm text-neutral-500">読み込み中...</div>}
+      {busy && <div className="mt-4 text-sm text-fg-dim">読み込み中...</div>}
 
       {error && (
-        <div className="mt-4 border border-red-300 bg-red-50 text-red-800 rounded-md p-3 text-sm">
+        <div className="mt-4 border border-rose-900/50 bg-rose-950/40 text-rose-200 rounded-md p-3 text-sm">
           <div className="font-semibold">JSON のパースに失敗しました</div>
           <div className="mt-1">{error.message}</div>
           {error.line != null && (
@@ -95,7 +95,7 @@ export function UploadPage() {
         </div>
       )}
 
-      <footer className="mt-12 text-xs text-neutral-400">
+      <footer className="mt-12 text-xs text-fg-dim">
         共有 URL を受け取った人は、上のアップロード手順は不要です。URL を開けば中身がそのまま見えます。
       </footer>
     </div>

@@ -6,6 +6,8 @@ type Props = {
 
 export function SizeIndicator({ bytes }: Props) {
   return (
-    <div className="text-xs text-neutral-500 tabular-nums">URL {formatBytes(bytes)}</div>
+    <span className="text-[11px] text-fg-dim tabular-nums normal-case tracking-normal">
+      URL {formatBytes(bytes)}
+    </span>
   );
 }

@@ -26,6 +26,53 @@ export function ResponseBlockView({ block }: Props) {
   }
 }
 
+// Copilot Chat 風の細い 1 行: 小さいファイルアイコン + past-tense メッセージ。
+// VS Code 由来の `[](file:///...)` 形式（リンクラベル空）が混じるので、
+// それは描画前に basename のインラインコードに変換する。
+function ToolInvocationView({ block }: { block: ResponseBlock }) {
+  const b = block as {
+    toolName?: string;
+    toolId?: string;
+    invocationMessage?: unknown;
+    pastTenseMessage?: unknown;
+  };
+  const raw = extractText(b.pastTenseMessage) || extractText(b.invocationMessage);
+  const message = raw ? rewriteEmptyLinkLabels(raw) : '';
+  const fallback = b.toolName || b.toolId;
+
+  return (
+    <div className="flex items-start gap-2 my-1 text-[13px] text-fg-muted min-w-0">
+      <span className="mt-[3px] shrink-0">
+        <FileIcon />
+      </span>
+      {message ? (
+        <div className="prose-chat prose-chat--compact min-w-0 flex-1 [&_p]:!my-0 [&_p]:!leading-relaxed [&_code]:bg-bg-chip [&_code]:text-fg [&_code]:border [&_code]:border-line-subtle [&_code]:px-[5px] [&_code]:py-[1px] [&_code]:rounded-md [&_a]:text-fg-muted [&_a]:no-underline">
+          <Markdown source={message} />
+        </div>
+      ) : fallback ? (
+        <span className="font-mono text-[12.5px] text-fg-dim">{fallback}</span>
+      ) : null}
+    </div>
+  );
+}
+
+// `[](file:///path/to/foo.ts)` のような空ラベルリンクを
+// `` `foo.ts` `` （basename のインラインコード）に置換する。
+// 既にラベルが入っている `[name](uri)` はそのまま。
+function rewriteEmptyLinkLabels(md: string): string {
+  return md.replace(/\[\]\(([^)\s]+)\)/g, (_match, urlRaw: string) => {
+    let url = urlRaw;
+    try {
+      url = decodeURIComponent(url);
+    } catch {
+      // 失敗してもフォールバックで処理する
+    }
+    const path = url.replace(/^file:\/\/+/, '/').replace(/^[a-z]+:\/\//, '');
+    const name = basename(path) || path;
+    return name ? `\`${name}\`` : '';
+  });
+}
+
 function TextEditBlock({ block }: { block: ResponseBlock }) {
   const [open, setOpen] = useState(false);
   const path = extractUriPath((block as { uri?: unknown }).uri);
@@ -34,48 +81,27 @@ function TextEditBlock({ block }: { block: ResponseBlock }) {
   const editCount = Array.isArray(edits) ? edits.length : 0;
 
   return (
-    <div className="border border-neutral-200 rounded-md bg-neutral-50 my-2">
+    <div className="my-2 text-[13px]">
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left text-sm hover:bg-neutral-100"
+        className="w-full flex items-center gap-2 text-left text-fg-muted hover:text-fg group"
       >
-        <span className="flex items-center gap-2 min-w-0">
-          <span className="inline-block px-2 py-[1px] rounded bg-neutral-800 text-white text-xs font-mono shrink-0">
-            edit
-          </span>
-          <span className="font-mono truncate" title={path}>
+        <span className="text-fg-dim text-[10px] w-3 shrink-0">{open ? '▾' : '▸'}</span>
+        <span className="text-fg-muted shrink-0">Edited</span>
+        <span className="inline-flex items-center gap-1 px-2 py-[1px] rounded-md bg-bg-chip border border-line-subtle text-fg font-mono text-[12px] min-w-0">
+          <FileIcon />
+          <span className="truncate" title={path}>
             {fileName}
           </span>
-          <span className="text-neutral-500 text-xs shrink-0">{editCount} 件の編集</span>
         </span>
-        <span className="text-neutral-400 text-xs shrink-0">{open ? '▾' : '▸'}</span>
+        <span className="text-fg-dim text-[12px] shrink-0">{editCount} 件の編集</span>
       </button>
       {open && (
-        <pre className="px-3 pb-3 text-xs overflow-x-auto text-neutral-700">
+        <pre className="mt-2 ml-5 px-3 py-2 text-[12px] overflow-x-auto bg-[#1a1a1a] border border-line-subtle rounded-md text-fg-muted">
           {JSON.stringify({ uri: path, edits }, null, 2)}
         </pre>
       )}
-    </div>
-  );
-}
-
-function ToolInvocationView({ block }: { block: ResponseBlock }) {
-  const b = block as {
-    toolName?: string;
-    toolId?: string;
-    invocationMessage?: unknown;
-    pastTenseMessage?: unknown;
-    input?: unknown;
-  };
-  const name = b.toolName ?? b.toolId ?? 'tool';
-  const message = extractText(b.pastTenseMessage) || extractText(b.invocationMessage);
-  return (
-    <div className="my-2 inline-flex items-start gap-2 max-w-full">
-      <span className="inline-block px-2 py-[1px] rounded bg-blue-100 text-blue-800 border border-blue-200 text-xs font-mono shrink-0">
-        {name}
-      </span>
-      {message && <span className="text-sm text-neutral-700">{message}</span>}
     </div>
   );
 }
@@ -84,15 +110,16 @@ function ThinkingView({ block }: { block: ResponseBlock }) {
   const text = extractText((block as { value?: unknown }).value);
   if (!text) return null;
   return (
-    <details className="my-2 border border-neutral-200 rounded-md bg-neutral-50 text-sm">
-      <summary className="cursor-pointer px-3 py-2 text-neutral-600 select-none">
-        <span className="inline-block px-2 py-[1px] mr-2 rounded bg-neutral-200 text-neutral-700 text-xs font-mono">
-          thinking
-        </span>
-        <span className="text-neutral-500">{summarize(text, 80)}</span>
+    <details className="my-2 text-[13px] group">
+      <summary className="cursor-pointer flex items-center gap-2 text-fg-muted hover:text-fg select-none list-none [&::-webkit-details-marker]:hidden">
+        <span className="text-fg-dim text-[10px] w-3 shrink-0 group-open:rotate-90 transition-transform">▸</span>
+        <span className="text-fg-muted shrink-0 italic">Thinking</span>
+        <span className="text-fg-dim truncate">{summarize(text, 80)}</span>
       </summary>
-      <div className="px-3 pb-3 pt-1 text-neutral-700">
-        <Markdown source={text} />
+      <div className="mt-2 ml-5 pl-3 border-l-2 border-line-subtle text-fg-muted">
+        <div className="prose-chat min-w-0">
+          <Markdown source={text} />
+        </div>
       </div>
     </details>
   );
@@ -102,29 +129,47 @@ function McpServersStartingView({ block }: { block: ResponseBlock }) {
   const ids = (block as { didStartServerIds?: unknown }).didStartServerIds;
   const idList = Array.isArray(ids) ? (ids as unknown[]).filter((x) => typeof x === 'string') : [];
   return (
-    <div className="my-2 text-xs text-neutral-500 flex items-center gap-2">
-      <span className="inline-block px-2 py-[1px] rounded bg-neutral-100 text-neutral-600 border border-neutral-200 font-mono">
-        mcp
-      </span>
-      <span>
-        {idList.length === 0
-          ? 'MCP サーバの起動なし'
-          : `MCP サーバ起動: ${idList.join(', ')}`}
-      </span>
+    <div className="my-1 text-[13px] text-fg-dim italic">
+      {idList.length === 0
+        ? 'MCP サーバの起動なし'
+        : `MCP サーバ起動: ${idList.join(', ')}`}
     </div>
   );
 }
 
 function UnknownKindView({ block }: { block: ResponseBlock }) {
   return (
-    <details className="my-2 border border-amber-300 rounded-md bg-amber-50 p-2 text-sm">
-      <summary className="cursor-pointer text-amber-800">
-        未対応ブロック (kind: <span className="font-mono">{block.kind || '(none)'}</span>)
+    <details className="my-2 text-[13px]">
+      <summary className="cursor-pointer flex items-center gap-2 text-amber-400/80 hover:text-amber-300 select-none list-none [&::-webkit-details-marker]:hidden">
+        <span className="text-[10px] w-3 shrink-0">▸</span>
+        <span>未対応ブロック (kind: <span className="font-mono">{block.kind || '(none)'}</span>)</span>
       </summary>
-      <pre className="mt-2 text-xs overflow-x-auto text-neutral-700">
+      <pre className="mt-2 ml-5 px-3 py-2 text-[12px] overflow-x-auto bg-[#1a1a1a] border border-line-subtle rounded-md text-fg-muted">
         {JSON.stringify(block, null, 2)}
       </pre>
     </details>
+  );
+}
+
+function FileIcon() {
+  return (
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="shrink-0 text-fg-dim"
+      aria-hidden
+    >
+      <path
+        d="M3 2h6l4 4v8a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1Z"
+        stroke="currentColor"
+        strokeWidth="1.2"
+        strokeLinejoin="round"
+      />
+      <path d="M9 2v4h4" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+    </svg>
   );
 }
 
