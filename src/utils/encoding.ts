@@ -55,6 +55,10 @@ export function estimateUrlLength(encoded: string): number {
   return buildShareUrl(encoded).length;
 }
 
+// バックエンド (server/index.js) のあるデプロイでのみ有効。
+// GitHub Pages のような静的ホスティングでは VITE_ENABLE_SHORT_LINK=false でビルドして無効化する。
+export const SHORT_LINK_ENABLED = import.meta.env.VITE_ENABLE_SHORT_LINK !== 'false';
+
 export async function createShortLink(encoded: string): Promise<string> {
   const res = await fetch('/api/share', {
     method: 'POST',

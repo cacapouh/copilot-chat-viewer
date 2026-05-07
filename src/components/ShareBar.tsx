@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { createShortLink } from '../utils/encoding';
+import { SHORT_LINK_ENABLED, createShortLink } from '../utils/encoding';
 
 type Props = {
   buildShareUrl: () => string;
@@ -69,23 +69,25 @@ export function ShareBar({ buildShareUrl, getEncoded, className }: Props) {
           </svg>
           共有 URL をコピー
         </button>
-        <button
-          type="button"
-          onClick={onShareShort}
-          disabled={status.kind === 'loading'}
-          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-bg-chip border border-line text-fg-muted hover:text-fg hover:bg-bg-elev text-[12px] disabled:opacity-60 disabled:cursor-not-allowed"
-        >
-          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path
-              d="M6.5 9.5a2.5 2.5 0 0 0 3.54 0l2-2a2.5 2.5 0 1 0-3.54-3.54l-.5.5M9.5 6.5a2.5 2.5 0 0 0-3.54 0l-2 2a2.5 2.5 0 1 0 3.54 3.54l.5-.5"
-              stroke="currentColor"
-              strokeWidth="1.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          {status.kind === 'loading' ? '作成中…' : 'ショートリンクをコピー'}
-        </button>
+        {SHORT_LINK_ENABLED && (
+          <button
+            type="button"
+            onClick={onShareShort}
+            disabled={status.kind === 'loading'}
+            className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-bg-chip border border-line text-fg-muted hover:text-fg hover:bg-bg-elev text-[12px] disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path
+                d="M6.5 9.5a2.5 2.5 0 0 0 3.54 0l2-2a2.5 2.5 0 1 0-3.54-3.54l-.5.5M9.5 6.5a2.5 2.5 0 0 0-3.54 0l-2 2a2.5 2.5 0 1 0 3.54 3.54l.5-.5"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            {status.kind === 'loading' ? '作成中…' : 'ショートリンクをコピー'}
+          </button>
+        )}
         {status.kind === 'ok' && <span className="text-[12px] text-emerald-400">{status.message}</span>}
         {status.kind === 'err' && <span className="text-[12px] text-rose-400">{status.message}</span>}
       </div>

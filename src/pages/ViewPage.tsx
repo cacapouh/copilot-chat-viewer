@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import type { Payload } from '../types/payload';
-import { decodePayload, fetchShortLink } from '../utils/encoding';
+import { SHORT_LINK_ENABLED, decodePayload, fetchShortLink } from '../utils/encoding';
 import { ChatView } from '../components/ChatView';
 
 type LoadResult =
@@ -41,6 +41,16 @@ export function ViewPage() {
     }
 
     if (shortId) {
+      if (!SHORT_LINK_ENABLED) {
+        setResult({
+          kind: 'error',
+          message:
+            'このデプロイではショートリンク機能が無効です。元の長い共有 URL (?d=...) を使ってください。',
+        });
+        return () => {
+          cancelled = true;
+        };
+      }
       setResult(null);
       fetchShortLink(shortId)
         .then((enc) => {
