@@ -27,6 +27,21 @@ export function ChatView({ initial }: Props) {
 
   const requests = Array.isArray(initial.rawJson.requests) ? initial.rawJson.requests : [];
 
+  function onDownload() {
+    const blob = new Blob([JSON.stringify(initial.rawJson, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const safeName = (title.trim() || 'chat').replace(/[\\/:*?"<>|]/g, '_');
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${safeName}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* 上部の細いヘッダーバー */}
@@ -60,7 +75,7 @@ export function ChatView({ initial }: Props) {
       </div>
 
       {/* 会話本体 */}
-      <main className="flex-1 max-w-3xl w-full mx-auto px-4 pb-12">
+      <main className="flex-1 max-w-3xl w-full mx-auto px-4 pb-6">
         {requests.length === 0 ? (
           <div className="text-fg-muted text-sm border border-dashed border-line rounded p-6 text-center mt-6">
             requests が見つかりませんでした。chat.json の構造を確認してください。
@@ -73,6 +88,26 @@ export function ChatView({ initial }: Props) {
           </div>
         )}
       </main>
+
+      {/* フッター: ダウンロード */}
+      <div className="max-w-3xl w-full mx-auto px-4 pb-12 pt-2 flex justify-center">
+        <button
+          type="button"
+          onClick={onDownload}
+          className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-bg-chip border border-line text-fg-muted hover:text-fg hover:bg-bg-elev text-[12px]"
+        >
+          <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+              d="M8 2.5v8m0 0L4.5 7M8 10.5 11.5 7M2.5 13.5h11"
+              stroke="currentColor"
+              strokeWidth="1.2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          chat.json をダウンロード
+        </button>
+      </div>
     </div>
   );
 }
