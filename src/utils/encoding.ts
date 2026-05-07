@@ -1,0 +1,51 @@
+import pako from 'pako';
+import type { Payload } from '../types/payload';
+
+// base64url <-> Uint8Array
+function bytesToBase64Url(bytes: Uint8Array): string {
+  let binary = '';
+  for (let i = 0; i < bytes.length; i++) {
+    binary += String.fromCharCode(bytes[i]);
+  }
+  const b64 = btoa(binary);
+  return b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function base64UrlToBytes(s: string): Uint8Array {
+  const b64 = s.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = b64.length % 4 === 0 ? '' : '='.repeat(4 - (b64.length % 4));
+  const binary = atob(b64 + pad);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
+}
+
+export function encodePayload(payload: Payload): string {
+  const json = JSON.stringify(payload);
+  const utf8 = new TextEncoder().encode(json);
+  const gz = pako.gzip(utf8);
+  return bytesToBase64Url(gz);
+}
+
+export function decodePayload(encoded: string): Payload {
+  const gz = base64UrlToBytes(encoded);
+  const utf8 = pako.ungzip(gz);
+  const json = new TextDecoder().decode(utf8);
+  const parsed = JSON.parse(json) as Payload;
+  if (parsed.v !== 1) {
+    throw new Error(`未知のスキーマバージョン: ${String(parsed.v)}`);
+  }
+  return parsed;
+}
+
+// 共有 URL を組み立てる。HashRouter 使用なので /#/view... 形式。
+export function buildShareUrl(encoded: string): string {
+  const base = `${window.location.origin}${window.location.pathname}`;
+  return `${base}#/view?d=${encoded}`;
+}
+
+export function estimateUrlLength(encoded: string): number {
+  return buildShareUrl(encoded).length;
+}
