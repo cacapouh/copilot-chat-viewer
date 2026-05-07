@@ -2,9 +2,12 @@
 
 VS Code GitHub Copilot Chat のエクスポート（`chat.json`）を、ブラウザだけで整形表示して共有 URL を発行するアプリ。
 
+**公開デモ: https://cacapouh.github.io/copilot-chat-viewer/**
+
 - サーバなし／ストレージなし／ログインなし
 - 全データ（chat.json + タイトル）は **gzip + base64url で URL のフラグメントに埋め込まれる**
 - フラグメントはサーバに送信されないため、静的ホスティング側で内容を見られる経路はない
+- ショートリンク機能はバックエンドのあるローカル起動時のみ有効。GH Pages デプロイでは無効化される
 
 ## 起動
 
