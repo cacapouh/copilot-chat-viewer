@@ -46,6 +46,36 @@ export function buildShareUrl(encoded: string): string {
   return `${base}#/view?d=${encoded}`;
 }
 
+export function buildShortShareUrl(id: string): string {
+  const base = `${window.location.origin}${window.location.pathname}`;
+  return `${base}#/view?s=${id}`;
+}
+
 export function estimateUrlLength(encoded: string): number {
   return buildShareUrl(encoded).length;
+}
+
+export async function createShortLink(encoded: string): Promise<string> {
+  const res = await fetch('/api/share', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ encoded }),
+  });
+  if (!res.ok) {
+    throw new Error(`ショートリンク作成に失敗しました (${res.status})`);
+  }
+  const data = (await res.json()) as { id: string };
+  return buildShortShareUrl(data.id);
+}
+
+export async function fetchShortLink(id: string): Promise<string> {
+  const res = await fetch(`/api/share/${encodeURIComponent(id)}`);
+  if (res.status === 404) {
+    throw new Error('指定された ID は見つかりませんでした');
+  }
+  if (!res.ok) {
+    throw new Error(`ショートリンク取得に失敗しました (${res.status})`);
+  }
+  const data = (await res.json()) as { encoded: string };
+  return data.encoded;
 }

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import type { Payload } from '../types/payload';
-import { decodePayload } from '../utils/encoding';
+import { decodePayload, fetchShortLink } from '../utils/encoding';
 import { ChatView } from '../components/ChatView';
 
 type LoadResult =
@@ -13,12 +13,11 @@ export function ViewPage() {
   const location = useLocation();
   const [result, setResult] = useState<LoadResult | null>(null);
 
-  // location.search は HashRouter 上では `?d=...` のフラグメント内クエリ。
+  // location.search は HashRouter 上では `?d=...` または `?s=...` のフラグメント内クエリ。
   // location.state はアップロード画面から navigate で渡された場合のみ存在する。
-  const encoded = useMemo(() => {
-    const params = new URLSearchParams(location.search);
-    return params.get('d');
-  }, [location.search]);
+  const params = useMemo(() => new URLSearchParams(location.search), [location.search]);
+  const encoded = params.get('d');
+  const shortId = params.get('s');
 
   const stateFromUpload = useMemo(() => {
     const s = location.state as { payload?: Payload } | null;
@@ -26,33 +25,65 @@ export function ViewPage() {
   }, [location.state]);
 
   useEffect(() => {
-    if (encoded) {
+    let cancelled = false;
+    function applyEncoded(enc: string) {
       try {
-        const p = decodePayload(encoded);
-        setResult({ kind: 'ok', payload: p });
+        const p = decodePayload(enc);
+        if (!cancelled) setResult({ kind: 'ok', payload: p });
       } catch (err) {
-        setResult({
-          kind: 'error',
-          message: err instanceof Error ? err.message : String(err),
-        });
+        if (!cancelled) {
+          setResult({
+            kind: 'error',
+            message: err instanceof Error ? err.message : String(err),
+          });
+        }
       }
-      return;
+    }
+
+    if (shortId) {
+      setResult(null);
+      fetchShortLink(shortId)
+        .then((enc) => {
+          if (!cancelled) applyEncoded(enc);
+        })
+        .catch((err) => {
+          if (!cancelled) {
+            setResult({
+              kind: 'error',
+              message: err instanceof Error ? err.message : String(err),
+            });
+          }
+        });
+      return () => {
+        cancelled = true;
+      };
+    }
+    if (encoded) {
+      applyEncoded(encoded);
+      return () => {
+        cancelled = true;
+      };
     }
     if (stateFromUpload) {
       setResult({ kind: 'ok', payload: stateFromUpload });
-      return;
+      return () => {
+        cancelled = true;
+      };
     }
     setResult({ kind: 'empty' });
-  }, [encoded, stateFromUpload]);
+    return () => {
+      cancelled = true;
+    };
+  }, [encoded, shortId, stateFromUpload]);
 
   if (!result) return null;
 
   if (result.kind === 'error') {
     return (
       <div className="max-w-xl mx-auto px-4 py-12">
-        <h1 className="text-xl font-semibold mb-2 text-fg">URL が壊れています</h1>
+        <h1 className="text-xl font-semibold mb-2 text-fg">表示できませんでした</h1>
         <p className="text-sm text-fg-muted">
-          共有データを復号できませんでした。URL が途中で切れている可能性があります。
+          共有データを取得・復号できませんでした。URL が途中で切れているか、ショートリンクが期限切れ・未登録の可能性があります。
         </p>
         <pre className="mt-3 text-xs bg-bg-elev border border-line-subtle text-fg-muted p-3 rounded overflow-x-auto">{result.message}</pre>
         <Link to="/" className="inline-block mt-6 text-sm text-accent underline">

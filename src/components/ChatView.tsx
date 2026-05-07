@@ -71,7 +71,10 @@ export function ChatView({ initial }: Props) {
           aria-label="チャットタイトル"
           className="w-full text-[15px] font-medium bg-transparent text-fg placeholder:text-fg-dim focus:outline-none"
         />
-        <ShareBar buildShareUrl={() => buildShareUrl(encodePayload(payload))} />
+        <ShareBar
+          buildShareUrl={() => buildShareUrl(encodePayload(payload))}
+          getEncoded={() => encodePayload(payload)}
+        />
       </div>
 
       {/* 会話本体 */}
