@@ -8,13 +8,22 @@ type Props = {
 };
 
 export function MessageItem({ request }: Props) {
-  const userText = readUserText(request.message);
   const blocks = Array.isArray(request.response) ? request.response : [];
   const chunks = mergeBlocks(blocks);
+  const r = request as {
+    isSystemInitiated?: unknown;
+    systemInitiatedLabel?: unknown;
+  };
+  const isSystemInitiated = r.isSystemInitiated === true;
+  const systemLabel = extractText(r.systemInitiatedLabel);
 
   return (
     <article className="py-5 space-y-4">
-      <UserMessage text={userText} />
+      {isSystemInitiated ? (
+        <SystemInitiatedNotice label={systemLabel} />
+      ) : (
+        <UserMessage text={readUserText(request.message)} />
+      )}
       <AssistantMessage chunks={chunks} />
     </article>
   );
@@ -33,6 +42,44 @@ function UserMessage({ text }: { text: string }) {
         )}
       </div>
     </div>
+  );
+}
+
+// VS Code が自動生成する system-initiated request（ターミナル終了通知など）。
+// `message.text` は機械的な長文ノイズなので user バブルでは描画せず、
+// VS Code 同様 `systemInitiatedLabel`（短い markdown ラベル）を inline で出す。
+function SystemInitiatedNotice({ label }: { label: string }) {
+  return (
+    <div className="flex items-start gap-2 my-1 text-[13px] text-fg-muted min-w-0">
+      <span className="mt-[3px] shrink-0">
+        <TerminalIcon />
+      </span>
+      {label ? (
+        <div className="prose-chat prose-chat--compact min-w-0 flex-1 [&_p]:!my-0 [&_p]:!leading-relaxed [&_code]:whitespace-pre-wrap">
+          <Markdown source={label} />
+        </div>
+      ) : (
+        <span className="italic text-fg-dim">system notification</span>
+      )}
+    </div>
+  );
+}
+
+function TerminalIcon() {
+  return (
+    <svg
+      width="11"
+      height="11"
+      viewBox="0 0 16 16"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className="shrink-0 text-fg-dim"
+      aria-hidden
+    >
+      <rect x="1.5" y="2.5" width="13" height="11" rx="1" stroke="currentColor" strokeWidth="1.2" />
+      <path d="M4 6l2.5 2L4 10" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M8 10.5h3.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" />
+    </svg>
   );
 }
 
